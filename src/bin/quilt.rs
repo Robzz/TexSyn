@@ -6,7 +6,7 @@ extern crate texsyn;
 use clap::{Arg, App};
 use image::*;
 
-use texsyn::{Quilter, QuilterParams};
+use texsyn::quilt::{Quilter, QuilterParams};
 
 fn main() {
     let matches = App::new("Quilt").version(crate_version!())

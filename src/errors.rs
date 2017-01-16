@@ -1,3 +1,5 @@
+use image::ColorType;
+
 error_chain! {
     types {
         Error, ErrorKind, ResultExt, Result;
@@ -31,7 +33,7 @@ error_chain! {
     // the same as `quick_error!`, but the `from()` and `cause()`
     // syntax is not supported.
     errors {
-        InvalidColorType(ct: ::ColorType) {
+        InvalidColorType(ct: ColorType) {
             description("Unsupported color type")
             display("Unsupported color type: '{:?}'", ct)
         }
