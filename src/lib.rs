@@ -105,8 +105,8 @@ fn patch_rect_error<D>(distance_func: &D, img1: &RgbImage, img2: &RgbImage,
     let (x1, y1) = coords_i1;
     let (x2, y2) = coords_i2;
     let mut acc = 0.;
-    for x in 0..rect_size.0 {
-        for y in 0..rect_size.1 {
+    for y in 0..rect_size.1 {
+        for x in 0..rect_size.0 {
             acc += distance_func(img1.get_pixel(x + x1, y + y1),
                                  img2.get_pixel(x + x2, y + y2));
         }
@@ -251,11 +251,16 @@ impl<'a, D> Quilter<'a, D> where D: 'a + Fn(&Rgb<u8>, &Rgb<u8>) -> f64 {
     fn patch_topleft_error(&self, patch: &Patch, buf_coords: (u32, u32)) -> f64
         where D: Fn(&Rgb<u8>, &Rgb<u8>) -> f64
     {
-        self.patch_top_error(patch, buf_coords) +
-        self.patch_left_error(patch, buf_coords) -
+        let buffer = self.buffer_opt.as_ref().unwrap();
         patch_rect_error(self.params.distance_func, &self.source,
-                         self.buffer_opt.as_ref().unwrap(), patch.coords, buf_coords,
-                         (self.params.overlap, self.params.overlap))
+                         buffer, patch.coords, buf_coords,
+                         (patch.size, self.params.overlap)) +
+        patch_rect_error(self.params.distance_func, &self.source,
+                         buffer,
+                         (patch.coords.0, patch.coords.1 + self.params.overlap),
+                         (buf_coords.0, buf_coords.1 + self.params.overlap),
+                         (self.params.overlap, patch.size - self.params.overlap))
+
     }
 
     /// Compute the error between the specified overlap area of the specified
@@ -283,8 +288,8 @@ impl<'a, D> Quilter<'a, D> where D: 'a + Fn(&Rgb<u8>, &Rgb<u8>) -> f64 {
         let mut rng = thread_rng();
         if let Some(chance) = self.params.selection_chance {
             while candidates_scores.is_empty() {
-                for x in 0..max_x + 1 {
-                    for y in 0..max_y + 1 {
+                for y in 0..max_y + 1 {
+                    for x in 0..max_x + 1 {
                         let Closed01(d) = Closed01::<f64>::rand(&mut rng);
                         if d > chance {
                             let p = Patch { coords: (x, y), size: self.params.patch_size };
@@ -299,8 +304,8 @@ impl<'a, D> Quilter<'a, D> where D: 'a + Fn(&Rgb<u8>, &Rgb<u8>) -> f64 {
             }
         }
         else {
-            for x in 0..max_x + 1 {
-                for y in 0..max_y + 1 {
+            for y in 0..max_y + 1 {
+                for x in 0..max_x + 1 {
                     let p = Patch { coords: (x, y), size: self.params.patch_size };
                     let error = self.patch_error(area, &p, buf_coords);
                     if error < current_best * (1. + TOLERANCE) {

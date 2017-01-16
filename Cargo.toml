@@ -5,6 +5,7 @@ authors = ["R.Chavignat <r.chavignat@gmail.com>"]
 
 [dependencies]
 approx = "0.1.1"
+clap = "2.20.0"
 conv = "0.3.3"
 error-chain = "0.7.2"
 imageproc = "0.7.0"
