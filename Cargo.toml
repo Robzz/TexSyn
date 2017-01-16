@@ -1,0 +1,13 @@
+[package]
+name = "texsyn"
+version = "0.1.0"
+authors = ["R.Chavignat <r.chavignat@gmail.com>"]
+
+[dependencies]
+approx = "0.1.1"
+conv = "0.3.3"
+error-chain = "0.7.2"
+imageproc = "0.7.0"
+image = "0.12.1"
+num-traits = "0.1.36"
+rand = "0.3.15"
