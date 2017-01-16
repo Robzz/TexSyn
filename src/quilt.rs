@@ -1,4 +1,4 @@
-//! Implementation of the Efros and Freeman Image Quilting algorithm.
+//! Implementation of the Efros and Freeman image quilting algorithm.
 use image::*;
 use rand::{Rng, Rand, Closed01, thread_rng};
 use rand::distributions::{Range, IndependentSample};
@@ -103,26 +103,27 @@ fn patch_rect_error<D>(distance_func: &D, img1: &RgbImage, img2: &RgbImage,
 
 /// Describes the parameters of the `Quilter` type.
 pub struct QuilterParams<'a, D> where D: 'a + Sync + Fn(&Rgb<u8>, &Rgb<u8>) -> f64 {
-    /// Size of the synthesized image
-    pub size: (u32, u32),
-    /// Size of the sample patches
-    pub patch_size: u32,
-    /// Size of the overlapping area between consecutive patches
-    pub overlap: u32,
-    /// Coordinates of the first patch used in the algorithm
-    pub seed_coords: Option<(u32, u32)>,
-    /// Selection chance of a patch in the selection phase. If `None`, the
-    /// algorithm will perform an exhaustive search. Otherwise, represents the
-    /// probability that a patch will be considered.
-    pub selection_chance: Option<f64>,
-    /// Distance function used by the algorithm
-    pub distance_func: &'a D
+    size: (u32, u32),
+    patch_size: u32,
+    overlap: u32,
+    seed_coords: Option<(u32, u32)>,
+    selection_chance: Option<f64>,
+    distance_func: &'a D
 }
 
 impl<'a, D> QuilterParams<'a, D>
     where D: Sync + Fn(&Rgb<u8>, &Rgb<u8>) -> f64
 {
     /// Create a new `QuilterParams`
+    ///
+    /// * `size`: Size of the synthesized image
+    /// * `patch_size`: Size of the sample patches
+    /// * `overlap`: Size of the overlapping area between consecutive patches
+    /// * `seed_coords`: Coordinates of the first patch used in the algorithm
+    /// * `selection_chance`: Selection chance of a patch in the selection phase.
+    /// If `None`, the algorithm will perform an exhaustive search. Otherwise,
+    /// represents the probability that a patch will be considered.
+    /// * `distance_func`: Distance function used by the algorithm
     pub fn new(size: (u32, u32), patch_size: u32, overlap: u32,
                seed_coords: Option<(u32, u32)>, selection_chance: Option<f64>,
                distance_func: &'a D) -> Result<QuilterParams<D>> {
@@ -151,7 +152,7 @@ impl<'a, D> QuilterParams<'a, D>
     }
 }
 
-/// Implements the Efros and Freeman Image Quilting algorithm.
+/// Implements the Efros and Freeman image quilting algorithm.
 pub struct Quilter<'a, D> where D: 'a + Sync +  Fn(&Rgb<u8>, &Rgb<u8>) -> f64 {
     source: RgbImage,
     buffer_opt: Option<RgbImage>,
