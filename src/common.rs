@@ -1,3 +1,4 @@
+use image::GenericImage;
 use num_traits::Float;
 use std::cmp::Ordering;
 use std::convert::TryFrom;
@@ -42,6 +43,33 @@ impl<F> Add for OrderedFloat<F> where F: Float {
 impl<F> AddAssign for OrderedFloat<F> where F: Float {
     fn add_assign(&mut self, other: Self) {
         self.val = self.val + other.val;
+    }
+}
+
+#[derive(Debug, Clone)]
+/// Describes a square patch in the source image
+pub struct Patch {
+    /// Coordinates of the bottom-left corner of the patch
+    pub coords: (u32, u32),
+    /// Size of the patch in pixels
+    pub size: u32
+}
+
+#[derive(Debug)]
+/// Describes a rectangle in an image
+pub struct Rect {
+    pub coords: (u32, u32),
+    pub size: (u32, u32)
+}
+
+pub fn blit_rect<I>(bottom: &mut I, top: &I, rect: &Rect, buf_coords: (u32, u32))
+    where I: GenericImage
+{
+    for x in 0..rect.size.0 {
+        for y in 0..rect.size.1 {
+            bottom.put_pixel(buf_coords.0 + x, buf_coords.1 + y,
+                             top.get_pixel(x + rect.coords.0, y + rect.coords.1));
+        }
     }
 }
 

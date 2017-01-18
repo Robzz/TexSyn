@@ -1,12 +1,11 @@
 #[macro_use]
 extern crate clap;
-extern crate image;
 extern crate texsyn;
 
 use clap::{Arg, App};
-use image::*;
 
-use texsyn::quilt::{Quilter, QuilterParams};
+use texsyn::{Quilter, QuilterParams};
+use texsyn::image::*;
 
 fn main() {
     let matches = App::new("Quilt").version(crate_version!())

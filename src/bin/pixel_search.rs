@@ -1,12 +1,11 @@
 #[macro_use]
 extern crate clap;
-extern crate image;
 extern crate texsyn;
 
 use clap::{Arg, App};
-use image::*;
 
-use texsyn::quilt::{PixelSearch, PixelSearchParams};
+use texsyn::{PixelSearch, PixelSearchParams};
+use texsyn::image::*;
 
 fn main() {
     let matches = App::new("PixelSearch").version(crate_version!())
