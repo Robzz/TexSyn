@@ -9,8 +9,7 @@ pub struct OrderedFloat<F> where F: Float {
 }
 
 impl<F> OrderedFloat<F> where F: Float {
-    #[allow(dead_code)]
-    fn as_float(&self) -> F { self.val }
+    pub fn as_float(&self) -> F { self.val }
 }
 
 impl<F> TryFrom<F> for OrderedFloat<F> where F: Float {
