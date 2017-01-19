@@ -5,6 +5,7 @@ extern crate texsyn;
 use clap::{Arg, App};
 
 use texsyn::{Quilter, QuilterParams};
+use texsyn::distance::l1;
 use texsyn::image::*;
 
 fn main() {
@@ -60,8 +61,7 @@ fn main() {
     let overlap = value_t!(matches, "overlap", u32).unwrap();
 
     let img = open(in_file).unwrap();
-    let d = &texsyn::distance::l1;
-    let params = QuilterParams::new((width, height), blocksize, overlap, None, None, d).unwrap();
+    let params = QuilterParams::new((width, height), blocksize, overlap, None, None, l1).unwrap();
     let mut quilter = Quilter::new(img.to_rgb(), params);
 
     let res = quilter.quilt_image().unwrap();

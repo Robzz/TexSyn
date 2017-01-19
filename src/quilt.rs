@@ -9,6 +9,7 @@ use std::convert::TryInto;
 use std::sync::Mutex;
 
 use common::{OrderedFloat, blit_rect, Rect, Patch};
+use distance::DistanceFunction;
 use errors::*;
 
 type ErrorSurface = ImageBuffer<Luma<f64>, Vec<f64>>;
@@ -59,11 +60,9 @@ fn patch_overlap_area(patch_no: (u32, u32)) -> OverlapArea {
 
 /// Compute the error between two images in a rectangle of specified size at
 /// the specified coordinates.
-fn patch_rect_error<D>(distance_func: &D, img1: &RgbImage, img2: &RgbImage,
-                       coords_i1: (u32, u32), coords_i2: (u32, u32),
-                       rect_size: (u32, u32)) -> f64
-    where D: Fn(&Rgb<u8>, &Rgb<u8>) -> f64
-{
+fn patch_rect_error(distance_func: DistanceFunction, img1: &RgbImage, img2: &RgbImage,
+                    coords_i1: (u32, u32), coords_i2: (u32, u32),
+                    rect_size: (u32, u32)) -> f64 {
     let (x1, y1) = coords_i1;
     let (x2, y2) = coords_i2;
     let mut acc = 0.;
@@ -77,18 +76,16 @@ fn patch_rect_error<D>(distance_func: &D, img1: &RgbImage, img2: &RgbImage,
 }
 
 /// Describes the parameters of the `Quilter` type.
-pub struct QuilterParams<'a, D> where D: 'a + Sync + Fn(&Rgb<u8>, &Rgb<u8>) -> f64 {
+pub struct QuilterParams {
     size: (u32, u32),
     patch_size: u32,
     overlap: u32,
     seed_coords: Option<(u32, u32)>,
     selection_chance: Option<f64>,
-    distance_func: &'a D
+    distance_func: DistanceFunction
 }
 
-impl<'a, D> QuilterParams<'a, D>
-    where D: Sync + Fn(&Rgb<u8>, &Rgb<u8>) -> f64
-{
+impl QuilterParams {
     /// Create a new `QuilterParams`
     ///
     /// * `size`: Size of the synthesized image
@@ -101,7 +98,7 @@ impl<'a, D> QuilterParams<'a, D>
     /// * `distance_func`: Distance function used by the algorithm
     pub fn new(size: (u32, u32), patch_size: u32, overlap: u32,
                seed_coords: Option<(u32, u32)>, selection_chance: Option<f64>,
-               distance_func: &'a D) -> Result<QuilterParams<D>> {
+               distance_func: DistanceFunction) -> Result<QuilterParams> {
         // Check that input size and overlap size are non zero
         match size {
             (0, _) | (_, 0) => bail!(ErrorKind::InvalidArguments("Output size can't be zero".to_owned())),
@@ -128,15 +125,15 @@ impl<'a, D> QuilterParams<'a, D>
 }
 
 /// Implements the Efros and Freeman image quilting algorithm.
-pub struct Quilter<'a, D> where D: 'a + Sync +  Fn(&Rgb<u8>, &Rgb<u8>) -> f64 {
+pub struct Quilter {
     source: RgbImage,
     buffer_opt: Option<RgbImage>,
-    params: QuilterParams<'a, D>
+    params: QuilterParams
 }
 
-impl<'a, D> Quilter<'a, D> where D: 'a + Sync + Fn(&Rgb<u8>, &Rgb<u8>) -> f64 {
+impl Quilter {
     /// Create a new `Quilter`.
-    pub fn new(source: RgbImage, params: QuilterParams<'a, D>) -> Quilter<'a, D> {
+    pub fn new(source: RgbImage, params: QuilterParams) -> Quilter {
         Quilter { source: source, buffer_opt: None, params: params }
     }
 
@@ -205,7 +202,7 @@ impl<'a, D> Quilter<'a, D> where D: 'a + Sync + Fn(&Rgb<u8>, &Rgb<u8>) -> f64 {
         let buffer = self.buffer_opt.as_ref().unwrap();
         match area {
             OverlapArea::Top => {
-                patch_rect_error(self.params. distance_func, &self.source,
+                patch_rect_error(self.params.distance_func, &self.source,
                                  buffer, patch.coords, buf_coords,
                                  (self.params.overlap, patch.size))
             }
@@ -570,7 +567,7 @@ mod tests {
         i1.put_pixel(5, 7, Rgb { data: [7, 7, 7] });
         i1.put_pixel(7, 5, Rgb { data: [7, 7, 7] });
 
-        let f = patch_rect_error(&l1, &i1, &i2, (4, 4), (0, 0), (3u32, 3u32));
+        let f = patch_rect_error(l1, &i1, &i2, (4, 4), (0, 0), (3u32, 3u32));
         assert_relative_eq!(f, 120.);
     }
 
@@ -582,8 +579,7 @@ mod tests {
             source.put_pixel(0, y, Rgb { data: [255, 0, 0] });
         }
 
-        let d = &l1;
-        let params = QuilterParams::new((100, 100), 5, 1, None, None, d).unwrap();
+        let params = QuilterParams::new((100, 100), 5, 1, None, None, l1).unwrap();
         let mut quilter = Quilter::new(source, params);
         let patch = Patch { coords: (0, 0), size: 5 };
         quilter.buffer_opt = Some(RgbImage::new(11, 11));
