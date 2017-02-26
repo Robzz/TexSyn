@@ -1,15 +1,20 @@
 [package]
-name = "texsyn"
+name = "TexSyn"
 version = "0.1.0"
-authors = ["R.Chavignat <r.chavignat@gmail.com>"]
+authors = ["r.chavignat@gmail.com"]
+repository = "https://github.com/Robzz/TexSyn"
+
+[[bin]]
+name = "pixel_search"
+path = "src/pixel_search.rs"
+
+[[bin]]
+name = "quilt"
+path = "src/quilt.rs"
 
 [dependencies]
-approx = "^0.1.1"
-clap = "^2.20.0"
-conv = "^0.3.3"
-error-chain = "^0.7.2"
-imageproc = "^0.7.0"
-image = "^0.12.1"
-num-traits = "^0.1.36"
-rand = "^0.3.15"
-rayon = "^0.6.0"
+clap = "2.20.5"
+libtexsyn = { path = "./libtexsyn" }
+
+[workspace]
+members = ["./libtexsyn"]
