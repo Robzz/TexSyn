@@ -13,11 +13,9 @@ extern crate rayon;
 mod common;
 pub mod distance;
 pub mod errors;
-pub mod quilt;
-pub mod search;
+pub mod generators;
 
-pub use quilt::{Quilter, QuilterParams};
-pub use search::{PixelSearch, PixelSearchParams};
+pub use generators::{Quilter, QuilterParams, PixelSearch, PixelSearchParams};
 pub mod image {
     pub use img::*;
 }
