@@ -14,8 +14,8 @@ impl<F> OrderedFloat<F> where F: Float {
 }
 
 impl<F> TryFrom<F> for OrderedFloat<F> where F: Float {
-    type Err = ();
-    fn try_from(val: F) -> Result<OrderedFloat<F>, Self::Err> {
+    type Error = ();
+    fn try_from(val: F) -> Result<OrderedFloat<F>, Self::Error> {
         if val.is_nan() { Err(()) }
         else { Ok(OrderedFloat { val: val }) }
     }
