@@ -92,6 +92,7 @@ impl PixelSearch {
         self.buffer_opt.take().unwrap()
     }
 
+    // Compute the number of valid neighbours in the neighbourhood around the specified pixel
     fn pixel_num_neigbours(&self, mask: &GrayImage, coords: (u32, u32)) -> u32 {
         let d = (self.params.window_size - 1) / 2;
         let xs = if coords.0 <= d { 0 } else { coords.0 - d };
@@ -111,6 +112,7 @@ impl PixelSearch {
         neighbours
     }
 
+    // Synthesize one single pixel
     fn synthesize_pixel(&self, mask: &GrayImage, coords: (u32, u32)) -> Rgb<u8> {
         // Find all similar neighbourhoods and pick one wihin 10% tolerance
         let mut errors = self.source.enumerate_pixels().collect::<Vec<_>>().into_par_iter()
@@ -128,6 +130,7 @@ impl PixelSearch {
         *self.source.get_pixel(x, y)
     }
 
+    // Compute the error between the specified neighbourhood and the specified pixel
     fn neighbourhood_error(&self, mask: &GrayImage, pixel: (u32, u32), neighbourhood: (u32, u32)) -> Option<f64> {
         let d = ((self.params.window_size - 1) / 2) as i32;
 

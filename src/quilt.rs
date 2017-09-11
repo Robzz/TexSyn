@@ -4,7 +4,7 @@ extern crate libtexsyn;
 
 use clap::{Arg, App};
 
-use libtexsyn::{Quilter, QuilterParams};
+use libtexsyn::generators::patch::{Quilter, QuilterParams};
 use libtexsyn::distance::l1;
 use libtexsyn::image::*;
 

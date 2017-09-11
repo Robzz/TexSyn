@@ -4,7 +4,7 @@ extern crate libtexsyn;
 
 use clap::{Arg, App};
 
-use libtexsyn::{PixelSearch, PixelSearchParams};
+use libtexsyn::generators::per_pixel::{PixelSearch, PixelSearchParams};
 use libtexsyn::image::*;
 
 fn main() {
