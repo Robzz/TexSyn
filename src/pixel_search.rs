@@ -1,11 +1,36 @@
 #[macro_use]
 extern crate clap;
 extern crate libtexsyn;
+extern crate ndimage;
 
 use clap::{Arg, App};
 
 use libtexsyn::generators::per_pixel::{PixelSearch, PixelSearchParams};
 use libtexsyn::image::*;
+
+fn rgbimage_to_ndimage(img: &RgbImage) -> ndimage::Image2D<ndimage::Rgb<u8>> {
+    let (w, h) = img.dimensions();
+    let mut out_img = ndimage::Image2D::new(w, h);
+    for x in 0..w {
+        for y in 0..h {
+            let p = img.get_pixel(x, y);
+            out_img.put_pixel(x, y, ndimage::Rgb::new([p[0], p[1], p[2]]));
+        }
+    }
+    out_img
+}
+
+fn ndimage_to_rgbimage(img: &ndimage::Image2D<ndimage::Rgb<u8>>) -> RgbImage {
+    let (w, h) = img.dimensions();
+    let mut out_img = RgbImage::new(w, h);
+    for x in 0..w {
+        for y in 0..h {
+            let p = img.get_pixel(x, y);
+            out_img.put_pixel(x, y, Rgb{ data: [p[0], p[1], p[2]] });
+        }
+    }
+    out_img
+}
 
 fn main() {
     let matches = App::new("PixelSearch").version(crate_version!())
@@ -52,8 +77,10 @@ fn main() {
 
     let img = open(in_file).unwrap();
     let params = PixelSearchParams::new((width, height), winsize, None).unwrap();
-    let mut ps = PixelSearch::new(img.to_rgb(), params).unwrap();
+    let ndimg = rgbimage_to_ndimage(&img.to_rgb());
+    let mut ps = PixelSearch::new(ndimg, params).unwrap();
 
     let res = ps.synthesize();
-    res.save(out_file).unwrap();
+    let ps_res = ndimage_to_rgbimage(&res);
+    ps_res.save(out_file).unwrap();
 }

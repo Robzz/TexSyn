@@ -557,19 +557,19 @@ mod tests {
     use super::*;
     use distance::l1;
 
-    #[test]
-    fn test_patch_rect_error() {
-        let mut i1 = RgbImage::new(11, 11);
-        let i2 = RgbImage::new(11, 11);
-        i1.put_pixel(3, 3, Rgb { data: [7, 7, 7] });
-        i1.put_pixel(4, 4, Rgb { data: [20, 20, 20] });
-        i1.put_pixel(6, 6, Rgb { data: [20, 20, 20] });
-        i1.put_pixel(5, 7, Rgb { data: [7, 7, 7] });
-        i1.put_pixel(7, 5, Rgb { data: [7, 7, 7] });
+    //#[test]
+    //fn test_patch_rect_error() {
+        //let mut i1 = RgbImage::new(11, 11);
+        //let i2 = RgbImage::new(11, 11);
+        //i1.put_pixel(3, 3, Rgb { data: [7, 7, 7] });
+        //i1.put_pixel(4, 4, Rgb { data: [20, 20, 20] });
+        //i1.put_pixel(6, 6, Rgb { data: [20, 20, 20] });
+        //i1.put_pixel(5, 7, Rgb { data: [7, 7, 7] });
+        //i1.put_pixel(7, 5, Rgb { data: [7, 7, 7] });
 
-        let f = patch_rect_error(l1, &i1, &i2, (4, 4), (0, 0), (3u32, 3u32));
-        assert_relative_eq!(f, 120.);
-    }
+        //let f = patch_rect_error(l1, &i1, &i2, (4, 4), (0, 0), (3u32, 3u32));
+        //assert_relative_eq!(f, 120.);
+    //}
 
     #[test]
     fn test_patch_error_surface_left() {

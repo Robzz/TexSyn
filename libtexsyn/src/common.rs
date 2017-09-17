@@ -1,7 +1,8 @@
-use image::GenericImage;
+use image::{GenericImage};
 use num_traits::Float;
+
 use std::cmp::Ordering;
-use std::convert::TryFrom;
+use std::convert::{TryFrom};
 use std::ops::{Add, AddAssign};
 
 #[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]

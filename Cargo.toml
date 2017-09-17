@@ -9,12 +9,18 @@ name = "pixel_search"
 path = "src/pixel_search.rs"
 
 [[bin]]
+name = "wei_levoy"
+path = "src/wei_levoy.rs"
+
+[[bin]]
 name = "quilt"
 path = "src/quilt.rs"
 
 [dependencies]
 clap = "2.26.0"
 libtexsyn = { path = "./libtexsyn" }
+ndarray = "0.10.4"
+ndimage = { path = "../ndimage", branch = "master" }
 
 [workspace]
 members = ["./libtexsyn"]

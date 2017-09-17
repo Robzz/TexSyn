@@ -1,5 +1,7 @@
 use image::ColorType;
 
+use std::io;
+
 error_chain! {
     types {
         Error, ErrorKind, ResultExt, Result;
@@ -27,6 +29,7 @@ error_chain! {
     //
     // This section can be empty.
     foreign_links {
+        Io(io::Error);
     }
 
     // Define additional `ErrorKind` variants. The syntax here is
