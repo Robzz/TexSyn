@@ -1,4 +1,5 @@
 use ndimage::*;
+use ndimage::rect::Rect;
 use num_traits::Zero;
 use rand::{thread_rng, random, Rng};
 use rayon::prelude::*;
@@ -6,7 +7,7 @@ use rayon::prelude::*;
 use std::cmp::min;
 use std::convert::TryFrom;
 
-use common::{OrderedFloat, Rect};
+use common::{OrderedFloat};
 use errors::*;
 
 type RgbImage = Image2D<Rgb<u8>>;
@@ -18,13 +19,13 @@ pub struct PixelSearchParams {
     seed_coords: Option<(u32, u32)>
 }
 
-fn blit_rect<P>(dest: &mut Image2D<P>, src: &Image2D<P>, rect: &Rect, buf_coords: (u32, u32))
+fn blit_rect<P>(dest: &mut Image2D<P>, src: &Image2D<P>, dest_rect: &Rect, src_rect: &Rect)
     where P: Pixel
 {
-    let mut dest_rect = dest.sub_image_mut(buf_coords.0, buf_coords.1, rect.size.0, rect.size.1);
-    let src_rect = src.sub_image(rect.coords.0, rect.coords.1, rect.size.0, rect.size.1);
+    let dest_iter = dest.rect_iterator_mut(dest_rect);
+    let src_iter = src.rect_iterator(src_rect);
 
-    for (pix_dest, pix_src) in dest_rect.into_iter().zip(src_rect.into_iter()) {
+    for (pix_dest, pix_src) in dest_iter.zip(src_iter) {
         *pix_dest = pix_src.clone();
     }
 }
@@ -85,32 +86,32 @@ impl PixelSearch {
     pub fn synthesize(&mut self) -> RgbImage {
         let (w, h) = self.params.size;
         self.buffer_opt = Some(RgbImage::new(w, h));
+
+        // Copy the initial seed to the center of the buffer and mark it as snthesized in the mask
+        let (sx, sy) = (random::<u32>() % (self.source.width() - 3), random::<u32>() % (self.source.height() - 3));
+        let dst_seed_rect = &Rect::new(w / 2 - 1, h / 2 - 1, 3, 3);
+        blit_rect(self.buffer_opt.as_mut().unwrap(), &self.source,
+                  &dst_seed_rect, &Rect::new(sx, sy, 3, 3));
         let mut mask = GrayImage::new(w, h);
         {
-            let mut mask_seed = mask.sub_image_mut(w / 2 - 1, h / 2 - 1, 3, 3);
+            let mask_seed = mask.rect_iterator_mut(&dst_seed_rect);
             for pix in mask_seed {
                 *pix = Luma::new([255u8]);
             }
         }
-        //draw_filled_rect_mut(&mut mask, IPRect::at((w / 2 - 1) as i32, (h / 2 - 1) as i32).of_size(3, 3), Luma { data: [255] });
-
-        // Copy the initial seed to the center of the buffer and grow an image from there
-        let (sx, sy) = (random::<u32>() % (self.source.width() - 3), random::<u32>() % (self.source.height() - 3));
-        blit_rect(self.buffer_opt.as_mut().unwrap(), &self.source, &Rect { coords: (sx, sy), size: (3, 3) }, (w / 2 - 1, h / 2 - 1));
 
         let mut n_pixels = mask.into_iter().filter(|p| p.is_zero()).count();
-        //println!("Got {} zero pixels", n_pixels);
         while n_pixels > 0 {
             // Find the next pixel to synthesize
             let next_pixel = mask.enumerate_pixels().collect::<Vec<_>>().into_par_iter()
                                  .filter_map(|((x, y), p)|
                                              if p.data[0].is_zero() && Self::is_edge_pixel(&mask, x as u32, y as u32) {
-                                                 Some((x as u32, y as u32))
+                                                let c = (x as u32, y as u32);
+                                                Some((c, self.pixel_num_neigbours(&mask, c)))
                                              }
                                              else {
                                                  None
                                              })
-                                 .map(|c| { (c, self.pixel_num_neigbours(&mask, c)) })
                                  .max_by_key(|&(_, n)| n).expect(":'('").0;
 
             // Synthesize the pixel and mark it as done
@@ -147,9 +148,14 @@ impl PixelSearch {
     // Synthesize one single pixel
     fn synthesize_pixel(&self, mask: &GrayImage, coords: (u32, u32)) -> Rgb<u8> {
         // Find all similar neighbourhoods and pick one wihin 10% tolerance
+        // TODO: filters the patches we can rule out early
+        let d = (self.params.window_size - 1) / 2;
+        let (xl, yt) = (coords.0.saturating_sub(d), coords.1.saturating_sub(d));
+        let dest_rect = Rect::new(xl, yt, self.params.window_size, self.params.window_size).crop_to_image(mask)
+                             .expect("Pixel to synthesize falls outside the destination image");
         let mut errors = self.source.enumerate_pixels().collect::<Vec<_>>().into_par_iter()
                                     .filter_map(|((x, y), _)|
-                                                if let Some(err) = self.neighbourhood_error(mask, coords, (x as u32, y as u32)) {
+                                                if let Some(err) = self.neighbourhood_error(mask, &dest_rect, (x as u32, y as u32)) {
                                                     Some((x as u32, y as u32, OrderedFloat::try_from(err).unwrap()))
                                                 }
                                                 else { None })
@@ -163,27 +169,21 @@ impl PixelSearch {
     }
 
     // Compute the error between the specified neighbourhood and the specified pixel
-    fn neighbourhood_error(&self, mask: &GrayImage, pixel: (u32, u32), neighbourhood: (u32, u32)) -> Option<f64> {
-        let d = ((self.params.window_size - 1) / 2) as i32;
+    fn neighbourhood_error(&self, mask: &GrayImage, dest_rect: &Rect, ref_src: (u32, u32)) -> Option<f64> {
+        let s = self.params.window_size;
+        let d = ((s - 1) / 2) as i64;
 
-        let (px, py) = (pixel.0 as i32, pixel.1 as i32);
-        let (nx, ny) = (neighbourhood.0 as i32, neighbourhood.1 as i32);
+        let src_rect = self.source.translate_rect(&Rect::new(ref_src.0, ref_src.1, s, s), -d, -d).unwrap();
+        let src_iter = self.source.rect_iterator(&src_rect);
+        let dst_iter = self.buffer_opt.as_ref().unwrap().rect_iterator(&dest_rect);
+        let mask_iter = mask.rect_iterator(&dest_rect);
 
-        let xs = min(min(d, px), min(d, nx));
-        let ys = min(min(d, py), min(d, ny));
-        let xe = min(min(d, self.source.width() as i32 - nx - 1), min(d, mask.width() as i32 - px - 1));
-        let ye = min(min(d, self.source.height() as i32 - ny - 1), min(d, mask.height() as i32 - py - 1));
         let mut error = 0.;
         let mut i = 0;
-        for y in -ys..ye + 1 {
-            for x in -xs..xe + 1 {
-                let (pxx, pyy) = ((px + x) as u32, (py + y) as u32);
-                let (nxx, nyy) = ((nx + x) as u32, (ny + y) as u32);
-                if Self::mask_on(mask, pxx, pyy) {
-                    error += l2(&self.source.get_pixel(nxx, nyy),
-                                &self.buffer_opt.as_ref().unwrap().get_pixel(pxx, pyy));
-                    i += 1;
-                }
+        for ((p_src, p_dst), p_mask) in src_iter.zip(dst_iter).zip(mask_iter) {
+            if p_mask[0] != 0u8 {
+                error += l2(p_src, p_dst);
+                i += 1;
             }
         }
 

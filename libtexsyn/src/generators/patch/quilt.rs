@@ -465,7 +465,7 @@ impl Quilter {
 
     fn cut_and_blit_vertical(&mut self, patch: &Patch, buf_coords: (u32, u32),
                              path: Vec<(u32, u32)>) {
-        let mut buffer = self.buffer_opt.as_mut().unwrap();
+        let buffer = self.buffer_opt.as_mut().unwrap();
         for (xp, yp) in path {
             if yp + patch.coords.1 < buffer.height() {
                 for x in 0..self.params.overlap {
@@ -479,7 +479,7 @@ impl Quilter {
 
     fn cut_and_blit_horizontal(&mut self, patch: &Patch, buf_coords: (u32, u32),
                                path: Vec<(u32, u32)>) {
-        let mut buffer = self.buffer_opt.as_mut().unwrap();
+        let buffer = self.buffer_opt.as_mut().unwrap();
         for (xp, yp) in path {
             if xp + patch.coords.0 < buffer.width() {
                 for y in 0..self.params.overlap {
@@ -495,7 +495,7 @@ impl Quilter {
                            hpath: Vec<(u32, u32)>, vpath: Vec<(u32, u32)>) {
         let overlap = self.params.overlap;
         let mut do_pixel = |x, y| {
-            let mut buffer = self.buffer_opt.as_mut().unwrap();
+            let buffer = self.buffer_opt.as_mut().unwrap();
             let hpos = hpath.iter().find(|&&(xx, _)| xx == x).unwrap();
             let vpos = vpath.iter().find(|&&(_, yy)| yy == y).unwrap();
             if y >= hpos.1 && x >= vpos.0 {
@@ -517,7 +517,7 @@ impl Quilter {
             OverlapArea::Left => {
                 let path = self.minimum_cost_vertical_path(err_surf);
                 self.cut_and_blit_vertical(patch, buf_coords, path);
-                let mut buffer = self.buffer_opt.as_mut().unwrap();
+                let buffer = self.buffer_opt.as_mut().unwrap();
                 blit_rect(buffer, &self.source,
                           &Rect { coords: (patch.coords.0 + overlap, patch.coords.1),
                                   size: (self.params.patch_size - overlap, self.params.patch_size) },
@@ -526,7 +526,7 @@ impl Quilter {
             OverlapArea::Top => {
                 let path = self.minimum_cost_horizontal_path(err_surf);
                 self.cut_and_blit_horizontal(patch, buf_coords, path);
-                let mut buffer = self.buffer_opt.as_mut().unwrap();
+                let buffer = self.buffer_opt.as_mut().unwrap();
                 blit_rect(buffer, &self.source,
                           &Rect { coords: (patch.coords.0, patch.coords.1 + overlap),
                                   size: (self.params.patch_size, self.params.patch_size - overlap) },
@@ -542,7 +542,7 @@ impl Quilter {
                 self.cut_and_blit_vertical(patch, buf_coords, vpath);
                 self.cut_and_blit_horizontal(patch, buf_coords, hpath);
                 self.cut_and_blit_corner(patch, buf_coords, hpath_corner, vpath_corner);
-                let mut buffer = self.buffer_opt.as_mut().unwrap();
+                let buffer = self.buffer_opt.as_mut().unwrap();
                 blit_rect(buffer, &self.source,
                           &Rect { coords: (patch.coords.0 + overlap, patch.coords.1 + overlap),
                                   size: (self.params.patch_size - overlap, self.params.patch_size - overlap) },

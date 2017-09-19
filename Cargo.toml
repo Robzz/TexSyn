@@ -24,3 +24,6 @@ ndimage = { path = "../ndimage", branch = "master" }
 
 [workspace]
 members = ["./libtexsyn"]
+
+[profile.release]
+debug = true

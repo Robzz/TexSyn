@@ -1,6 +1,7 @@
 use ndarray::prelude::*;
 use ndarray::iter::Iter;
 use ndimage::*;
+use ndimage::rect::Rect;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NeighbourhoodElem {
@@ -86,7 +87,7 @@ impl Neighbourhood {
             true => 0,
             false => rows - y_size_offset
         };
-        let sub_image = img.sub_image(x as u32, y as u32, w as u32, h as u32);
+        let sub_image = img.rect_iterator(&Rect::new(x as u32, y as u32, w as u32, h as u32));
 
         NeighbourhoodIterator::new(
             self.elems.slice(s![(x_size_offset_left as isize..(x_size_offset_left + w) as isize),

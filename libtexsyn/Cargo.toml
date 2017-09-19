@@ -17,6 +17,7 @@ ndimage = { path = "../../ndimage", branch = "master" }
 rand = "0.3.16"
 rayon = "0.8.2"
 term = "0.4.6"
+time = "*"
 
 [dependencies.ndarray]
 version = "0.10.6"
