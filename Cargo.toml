@@ -20,7 +20,7 @@ path = "src/quilt.rs"
 clap = "2.26.0"
 libtexsyn = { path = "./libtexsyn" }
 ndarray = "0.10.4"
-ndimage = { path = "../ndimage", branch = "master" }
+ndimage = { git = "https://github.com/Robzz/ndimage", branch = "master" }
 
 [workspace]
 members = ["./libtexsyn"]

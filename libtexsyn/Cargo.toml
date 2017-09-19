@@ -12,8 +12,7 @@ imageproc = "0.10.0"
 image = "0.15.0"
 noise = "0.4.1"
 num-traits = "0.1.40"
-#ndimage = { git = "https://github.com/Robzz/ndimage", branch = "master" }
-ndimage = { path = "../../ndimage", branch = "master" }
+ndimage = { git = "https://github.com/Robzz/ndimage", branch = "master" }
 rand = "0.3.16"
 rayon = "0.8.2"
 term = "0.4.6"
