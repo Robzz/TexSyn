@@ -1,7 +1,6 @@
 use image::GenericImage;
 use num_traits::Float;
 use std::cmp::Ordering;
-use std::convert::TryFrom;
 use std::ops::{Add, AddAssign};
 
 #[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
@@ -11,11 +10,9 @@ pub struct OrderedFloat<F> where F: Float {
 
 impl<F> OrderedFloat<F> where F: Float {
     pub fn as_float(&self) -> F { self.val }
-}
 
-impl<F> TryFrom<F> for OrderedFloat<F> where F: Float {
-    type Error = ();
-    fn try_from(val: F) -> Result<OrderedFloat<F>, Self::Error> {
+    /// Try converting a Float into an OrderedFloat.
+    pub fn try_from(val: F) -> Result<OrderedFloat<F>, ()> {
         if val.is_nan() { Err(()) }
         else { Ok(OrderedFloat { val: val }) }
     }

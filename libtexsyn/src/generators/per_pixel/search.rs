@@ -6,7 +6,6 @@ use rand::{thread_rng, random, Rng};
 use rayon::prelude::*;
 
 use std::cmp::min;
-use std::convert::TryFrom;
 
 use common::{OrderedFloat, blit_rect, Rect};
 use distance::l2;

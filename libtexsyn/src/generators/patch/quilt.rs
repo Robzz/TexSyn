@@ -5,7 +5,6 @@ use rand::distributions::{Range, IndependentSample};
 use rayon::prelude::*;
 
 use std::collections::HashMap;
-use std::convert::TryInto;
 use std::sync::Mutex;
 
 use common::{OrderedFloat, blit_rect, Rect, Patch};
@@ -331,7 +330,7 @@ impl Quilter {
             }
             else if y == 0 {
                 let val = *e.get_pixel(x, y);
-                let v: OrderedFloat<f64> = val.data[0].try_into().unwrap();
+                let v = OrderedFloat::<f64>::try_from(val.data[0]).unwrap();
                 cost_map.insert((x, y), v);
                 v
             }
@@ -345,7 +344,7 @@ impl Quilter {
                     let v = pixel_error(cost_map, e, overlap, x + 1, y - 1);
                     if v < val { val = v };
                 }
-                val += e.get_pixel(x, y).data[0].try_into().unwrap();
+                val += OrderedFloat::<f64>::try_from(e.get_pixel(x, y).data[0]).unwrap();
                 cost_map.insert((x, y), val);
                 val
             }
@@ -402,7 +401,7 @@ impl Quilter {
             }
             else if x == 0 {
                 let val = *e.get_pixel(x, y);
-                let v: OrderedFloat<f64> = val.data[0].try_into().unwrap();
+                let v = OrderedFloat::<f64>::try_from(val.data[0]).unwrap();
                 cost_map.insert((x, y), v);
                 v
             }
@@ -416,7 +415,7 @@ impl Quilter {
                     let v = pixel_error(cost_map, e, overlap, x - 1, y + 1);
                     if v < val { val = v };
                 }
-                val += e.get_pixel(x, y).data[0].try_into().unwrap();
+                val += OrderedFloat::<f64>::try_from(e.get_pixel(x, y).data[0]).unwrap();
                 cost_map.insert((x, y), val);
                 val
             }
@@ -465,7 +464,7 @@ impl Quilter {
 
     fn cut_and_blit_vertical(&mut self, patch: &Patch, buf_coords: (u32, u32),
                              path: Vec<(u32, u32)>) {
-        let mut buffer = self.buffer_opt.as_mut().unwrap();
+        let buffer = self.buffer_opt.as_mut().unwrap();
         for (xp, yp) in path {
             if yp + patch.coords.1 < buffer.height() {
                 for x in 0..self.params.overlap {
@@ -479,7 +478,7 @@ impl Quilter {
 
     fn cut_and_blit_horizontal(&mut self, patch: &Patch, buf_coords: (u32, u32),
                                path: Vec<(u32, u32)>) {
-        let mut buffer = self.buffer_opt.as_mut().unwrap();
+        let buffer = self.buffer_opt.as_mut().unwrap();
         for (xp, yp) in path {
             if xp + patch.coords.0 < buffer.width() {
                 for y in 0..self.params.overlap {
@@ -495,7 +494,7 @@ impl Quilter {
                            hpath: Vec<(u32, u32)>, vpath: Vec<(u32, u32)>) {
         let overlap = self.params.overlap;
         let mut do_pixel = |x, y| {
-            let mut buffer = self.buffer_opt.as_mut().unwrap();
+            let buffer = self.buffer_opt.as_mut().unwrap();
             let hpos = hpath.iter().find(|&&(xx, _)| xx == x).unwrap();
             let vpos = vpath.iter().find(|&&(_, yy)| yy == y).unwrap();
             if y >= hpos.1 && x >= vpos.0 {
