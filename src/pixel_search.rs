@@ -1,11 +1,15 @@
 #[macro_use]
 extern crate clap;
 extern crate libtexsyn;
+extern crate ndimage;
 
 use clap::{Arg, App};
 
 use libtexsyn::generators::per_pixel::{PixelSearch, PixelSearchParams};
-use libtexsyn::image::*;
+use ndimage::io::png::{PngDecoder, PngEncoder8, SubpixelType, ImageChannels};
+use ndimage::image2d::rgba_to_rgb;
+
+use std::fs::File;
 
 fn main() {
     let matches = App::new("PixelSearch").version(crate_version!())
@@ -50,10 +54,21 @@ fn main() {
                           else { (value_t!(matches, "width", u32).unwrap(), value_t!(matches, "height", u32).unwrap()) };
     let winsize = value_t!(matches, "window-size", u32).unwrap();
 
-    let img = open(in_file).unwrap();
+    let in_file_stream = File::open(in_file).expect("Cannot open input file.");
+    let decoder = PngDecoder::new(&in_file_stream).expect("Cannot create PNG decoder");
+    let in_img = match decoder.image_channels() {
+        ImageChannels::RGB => decoder.read_rgb_u8().unwrap(),
+        ImageChannels::RGBA => {
+            let img = decoder.read_rgb_alpha_u8().unwrap();
+            rgba_to_rgb(&img)
+        },
+        _ => panic!("Unsupported image type!")
+    };
     let params = PixelSearchParams::new((width, height), winsize, None).unwrap();
-    let mut ps = PixelSearch::new(img.to_rgb(), params).unwrap();
+    let mut ps = PixelSearch::new(in_img, params).unwrap();
 
     let res = ps.synthesize();
-    res.save(out_file).unwrap();
+    let out_file_stream = File::create(out_file).unwrap();
+    let encoder = PngEncoder8::new(&res, out_file_stream).unwrap();
+    encoder.write().unwrap();
 }

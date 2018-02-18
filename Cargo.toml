@@ -15,6 +15,7 @@ path = "src/quilt.rs"
 [dependencies]
 clap = "2.30.0"
 libtexsyn = { path = "./libtexsyn" }
+ndimage = { git = "https://github.com/Robzz/ndimage", branch = "texsyn_migration" }
 
 [workspace]
 members = ["./libtexsyn"]
